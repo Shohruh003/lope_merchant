@@ -1,8 +1,9 @@
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import type { ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 
 import { api, type DashboardProduct } from '../lib/api';
+import { useAuth } from '../lib/auth-context';
 import { useProduct } from '../lib/product-context';
 
 /// Persistent top-nav shell that wraps every dashboard page. Left
@@ -12,6 +13,8 @@ import { useProduct } from '../lib/product-context';
 export function AppShell({ children }: { children: ReactNode }) {
   const { active, setActive } = useProduct();
   const location = useLocation();
+  const navigate = useNavigate();
+  const { logout } = useAuth();
 
   const productsQuery = useQuery({
     queryKey: ['dashboard', 'products'],
@@ -19,6 +22,11 @@ export function AppShell({ children }: { children: ReactNode }) {
     staleTime: 5 * 60_000, // catalogue barely changes
   });
   const products = (productsQuery.data ?? []).filter((p) => p.active);
+
+  const onLogout = () => {
+    logout();
+    navigate('/login', { replace: true });
+  };
 
   return (
     <div className="min-h-screen bg-neutral-50">
@@ -39,6 +47,13 @@ export function AppShell({ children }: { children: ReactNode }) {
               active={active}
               onChange={setActive}
             />
+            <button
+              type="button"
+              onClick={onLogout}
+              className="rounded-md px-3 py-1.5 text-xs font-medium text-neutral-600 hover:bg-neutral-100"
+            >
+              Chiqish
+            </button>
           </div>
         </div>
       </header>

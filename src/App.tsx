@@ -1,65 +1,85 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
 import { AppShell } from './components/AppShell';
+import { RequireAuth } from './components/RequireAuth';
+import { AuthProvider } from './lib/auth-context';
 import { ProductProvider } from './lib/product-context';
+import LoginPage from './pages/LoginPage';
 import OverviewPage from './pages/OverviewPage';
 import PaymentsPage from './pages/PaymentsPage';
 
 /// Root of the LOPE MCHJ merchant dashboard.
 ///
-/// Every route lives inside [AppShell] so the top-nav + product
-/// picker + auth guard stay put across navigation.
+/// Provider order matters — AuthProvider must wrap ProductProvider
+/// so a logout can clear both without racing the product context's
+/// localStorage listener.
 ///
-/// Auth: TODO — the current build assumes a JWT already lives in
-/// `lope_merchant.jwt` localStorage. A dedicated `/login` route that
-/// signs an admin user in will land in the next slice.
+/// Route layout:
+///   /login              — public
+///   everything else     — behind <RequireAuth> which bounces
+///                         anonymous callers to /login, preserving
+///                         the intended destination via
+///                         location.state.from.
 export default function App() {
   return (
-    <ProductProvider>
-      <Routes>
-        <Route path="/" element={<Navigate to="/overview" replace />} />
-        <Route
-          path="/overview"
-          element={
-            <AppShell>
-              <OverviewPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/payments"
-          element={
-            <AppShell>
-              <PaymentsPage />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/reconciliation"
-          element={
-            <AppShell>
-              <ComingSoon title="Sverka" />
-            </AppShell>
-          }
-        />
-        <Route
-          path="/fiscal"
-          element={
-            <AppShell>
-              <ComingSoon title="OFD cheklar" />
-            </AppShell>
-          }
-        />
-        <Route
-          path="*"
-          element={
-            <AppShell>
-              <ComingSoon title="Sahifa topilmadi" />
-            </AppShell>
-          }
-        />
-      </Routes>
-    </ProductProvider>
+    <AuthProvider>
+      <ProductProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/" element={<Navigate to="/overview" replace />} />
+          <Route
+            path="/overview"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <OverviewPage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/payments"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <PaymentsPage />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/reconciliation"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <ComingSoon title="Sverka" />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/fiscal"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <ComingSoon title="OFD cheklar" />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="*"
+            element={
+              <RequireAuth>
+                <AppShell>
+                  <ComingSoon title="Sahifa topilmadi" />
+                </AppShell>
+              </RequireAuth>
+            }
+          />
+        </Routes>
+      </ProductProvider>
+    </AuthProvider>
   );
 }
 

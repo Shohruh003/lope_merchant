@@ -64,6 +64,19 @@ async function request<T>(
     } catch {
       /* ignore */
     }
+    // 401 → the token we've been sending has expired or been
+    // revoked. Wipe local storage and let the next navigation
+    // bounce to /login through RequireAuth. Doing this here means
+    // every hook (TanStack Query, direct fetch, whatever) reacts
+    // consistently.
+    if (res.status === 401) {
+      setToken(null);
+      try {
+        window.localStorage.removeItem('lope_merchant.user');
+      } catch {
+        /* ignore */
+      }
+    }
     const msg =
       (body as { message?: string } | null)?.message ??
       res.statusText ??
