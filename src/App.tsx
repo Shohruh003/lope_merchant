@@ -1,74 +1,75 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 
+import { AppShell } from './components/AppShell';
 import { ProductProvider } from './lib/product-context';
+import OverviewPage from './pages/OverviewPage';
+import PaymentsPage from './pages/PaymentsPage';
 
-/// Root of the LOPE MCHJ merchant dashboard. Layout + routing only —
-/// each page-level view lives in `./pages`.
+/// Root of the LOPE MCHJ merchant dashboard.
 ///
-/// Routes shipped in the first cut:
-///   /                       → redirect to /overview
-///   /overview               → today totals + real-time feed
-///   /payments               → paginated transaction table with filters
-///   /reconciliation         → DB vs Payme/Click cabinet drift view
-///   /fiscal                 → OFD chek status per payment
-///   /export                 → CSV / Excel download
-///   /login                  → JWT sign-in (merchant role gate)
+/// Every route lives inside [AppShell] so the top-nav + product
+/// picker + auth guard stay put across navigation.
 ///
-/// Every page reads the currently selected product from
-/// [ProductProvider] — the top-nav switcher scopes every view to
-/// Lope Style / Lope Store / Lope Pay / ... / All. New products
-/// appear automatically once the backend lists them in
-/// `GET /gateway/dashboard/products`.
-///
-/// Pages are stubs until the backend endpoints exist. Building the
-/// shell first so we can wire real data in without shuffling layout.
+/// Auth: TODO — the current build assumes a JWT already lives in
+/// `lope_merchant.jwt` localStorage. A dedicated `/login` route that
+/// signs an admin user in will land in the next slice.
 export default function App() {
   return (
     <ProductProvider>
-      <div className="min-h-screen bg-neutral-50 text-neutral-900">
-        <Routes>
-          <Route path="/" element={<Navigate to="/overview" replace />} />
-          <Route
-            path="/overview"
-            element={<PlaceholderPage title="Umumiy" />}
-          />
-          <Route
-            path="/payments"
-            element={<PlaceholderPage title="To'lovlar" />}
-          />
-          <Route
-            path="/reconciliation"
-            element={<PlaceholderPage title="Sverka" />}
-          />
-          <Route
-            path="/fiscal"
-            element={<PlaceholderPage title="OFD cheklar" />}
-          />
-          <Route
-            path="/export"
-            element={<PlaceholderPage title="Eksport" />}
-          />
-          <Route path="/login" element={<PlaceholderPage title="Kirish" />} />
-          <Route
-            path="*"
-            element={<PlaceholderPage title="Sahifa topilmadi" />}
-          />
-        </Routes>
-      </div>
+      <Routes>
+        <Route path="/" element={<Navigate to="/overview" replace />} />
+        <Route
+          path="/overview"
+          element={
+            <AppShell>
+              <OverviewPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/payments"
+          element={
+            <AppShell>
+              <PaymentsPage />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/reconciliation"
+          element={
+            <AppShell>
+              <ComingSoon title="Sverka" />
+            </AppShell>
+          }
+        />
+        <Route
+          path="/fiscal"
+          element={
+            <AppShell>
+              <ComingSoon title="OFD cheklar" />
+            </AppShell>
+          }
+        />
+        <Route
+          path="*"
+          element={
+            <AppShell>
+              <ComingSoon title="Sahifa topilmadi" />
+            </AppShell>
+          }
+        />
+      </Routes>
     </ProductProvider>
   );
 }
 
-/// Temporary until each real page lands. Renders the route title so
-/// we can visually confirm routing works while the backend is being
-/// built out.
-function PlaceholderPage({ title }: { title: string }) {
+function ComingSoon({ title }: { title: string }) {
   return (
-    <main className="mx-auto max-w-5xl px-6 py-16">
-      <h1 className="text-2xl font-semibold">{title}</h1>
+    <div className="rounded-lg border border-neutral-200 bg-white p-16 text-center">
+      <h1 className="text-xl font-semibold">{title}</h1>
       <p className="mt-2 text-sm text-neutral-500">
-        LOPE MCHJ merchant paneli. Bu sahifa hali yaratilmagan.
+        Bu sahifa keyingi versiyada tayyor bo'ladi.
       </p>
-    </main>
+    </div>
   );
 }
