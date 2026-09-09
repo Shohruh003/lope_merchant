@@ -1,0 +1,33 @@
+# Netlify deploy config for lope_merchant.
+#
+# One-command deploy: connect the repo (subdir: lope_merchant/) to a
+# Netlify site and Netlify will pick up this file. VITE_API_URL is set
+# in the Netlify dashboard, not here.
+
+[build]
+  base = "."
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback — React Router routes are served by index.html so any
+# deep link like /finance/reconciliation loads the app instead of a
+# 404.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Belt-and-braces security headers. `Referrer-Policy` and X-Frame /
+# X-Content-Type are always safe. CSP is intentionally permissive to
+# start — we'll tighten `connect-src` once the exact API domains are
+# fixed.
+[[headers]]
+  for = "/*"
+    [headers.values]
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "geolocation=(), microphone=(), camera=()"
